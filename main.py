@@ -1,6 +1,6 @@
 # =====================================================
-# HORIZON STAY - DASHBOARD BI PROFESIONAL (VERSIÓN MEJORADA)
-# Más color • Más interacción • Más diseño • Más profesional
+# HORIZON STAY - DASHBOARD BI ULTRA PROFESIONAL
+# Fondo animado • Colores dinámicos • Diseño moderno • Interactivo
 # =====================================================
 
 import streamlit as st
@@ -22,77 +22,98 @@ st.set_page_config(
 )
 
 # =====================================================
-# 2. CSS ULTRA PROFESIONAL (MUCHO MÁS COLOR Y DISEÑO)
+# 2. FONDO NEGRO ANIMADO (CAMBIO DE COLOR AUTOMÁTICO)
 # =====================================================
 
 st.markdown("""
 <style>
 
-/* Fondo general */
+/* Animación de fondo */
+body {
+    background: linear-gradient(-45deg, #05070b, #0b0f14, #0e1117, #06131a);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+/* Fondo principal */
 .main {
-    background: linear-gradient(180deg, #0b0f14 0%, #0e1117 100%);
+    background: transparent;
     color: white;
 }
 
-/* Títulos */
+/* TÍTULO PRINCIPAL CON EFECTO NEÓN */
 h1 {
-    font-size: 40px !important;
-    font-weight: 700 !important;
-    background: linear-gradient(90deg, #00f2ff, #00ff95);
+    font-size: 44px !important;
+    font-weight: 800 !important;
+    text-align: center;
+    background: linear-gradient(90deg, #00f2ff, #00ff95, #ff00ea);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
+/* Subtítulos */
 h2, h3 {
     color: #ffffff !important;
 }
 
-/* Tarjetas KPI */
+/* Tarjetas KPI tipo vidrio */
 .stMetric {
-    background: linear-gradient(145deg, #11161d, #0b0f14);
+    background: rgba(15, 20, 30, 0.7);
+    backdrop-filter: blur(10px);
     padding: 25px;
-    border-radius: 20px;
-    border: 1px solid #2a2f3a;
-    box-shadow: 0px 8px 20px rgba(0,0,0,0.6);
-    transition: 0.3s ease-in-out;
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.6);
+    transition: 0.3s ease;
 }
 
 .stMetric:hover {
-    transform: scale(1.03);
-    box-shadow: 0px 10px 25px rgba(0,255,180,0.2);
+    transform: translateY(-6px);
+    box-shadow: 0px 15px 40px rgba(0,255,200,0.25);
 }
 
-/* Sidebar */
+/* Sidebar con efecto oscuro elegante */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #05080d, #0b0f14);
+    background: linear-gradient(180deg, #020305, #06090f);
 }
 
-/* Botones */
+/* Botones con brillo */
 .stButton > button {
     background: linear-gradient(90deg, #00f2ff, #00ff95);
     border: none;
-    border-radius: 12px;
-    padding: 10px 20px;
+    border-radius: 14px;
+    padding: 12px 25px;
     font-weight: bold;
     color: black;
+    transition: 0.3s ease;
 }
 
-/* Radio */
+.stButton > button:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 0px 20px #00ffd0;
+}
+
+/* Radio botones */
 .stRadio > div {
-    background-color: #11161d;
+    background: rgba(15,20,30,0.6);
     padding: 15px;
     border-radius: 15px;
 }
 
 /* Dataframes */
 .stDataFrame {
-    background-color: #11161d;
+    background: rgba(10, 14, 20, 0.7);
     border-radius: 15px;
 }
 
 </style>
 """, unsafe_allow_html=True)
-
 
 # =====================================================
 # 3. CONEXIÓN A POSTGRESQL (MISMA CONEXIÓN)
@@ -114,9 +135,8 @@ def get_connection():
         st.error(f"Error de conexión: {e}")
         return None
 
-
 # =====================================================
-# 4. FUNCIÓN GLOBAL PARA CONSULTAS SQL
+# 4. FUNCIÓN GLOBAL PARA CONSULTAS
 # =====================================================
 
 @st.cache_data(ttl=300)
@@ -126,14 +146,13 @@ def run_query(query):
         return pd.read_sql(query, conn)
     return pd.DataFrame()
 
-
 # =====================================================
-# 5. SIDEBAR PROFESIONAL
+# 5. SIDEBAR MODERNA
 # =====================================================
 
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=120)
 st.sidebar.title("Horizon Stay BI")
-st.sidebar.markdown("### Dashboard Profesional de Inteligencia Empresarial")
+st.sidebar.markdown("### Inteligencia Empresarial del Hotel")
 st.sidebar.markdown("---")
 
 menu = st.sidebar.radio(
@@ -145,22 +164,21 @@ menu = st.sidebar.radio(
         "🍽️ Servicios Premium",
         "👥 Fidelidad de Clientes",
         "🚚 Transporte y Logística",
-        "📈 Reporte Avanzado"
+        "📈 Reporte Inteligente"
     ]
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("Proyecto Profesional - Base de Datos II")
-
+st.sidebar.success("Sistema activo")
 
 # =====================================================
-# 6. DASHBOARD EJECUTIVO (MÁS INTERACTIVO)
+# 6. DASHBOARD PRINCIPAL (MUCHO MÁS BONITO)
 # =====================================================
 
 if menu == "📊 Dashboard Ejecutivo":
 
-    st.title("Dashboard Ejecutivo Horizon Stay")
-    st.markdown("### Panel principal con indicadores clave del hotel")
+    st.title("Horizon Stay Business Intelligence")
+    st.markdown("### Panel profesional con indicadores clave del negocio hotelero")
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -176,42 +194,36 @@ if menu == "📊 Dashboard Ejecutivo":
 
     st.divider()
 
-    # ----- GRAFICO 1 -----
+    # Gráfico 1
     df1 = run_query("SELECT estado_reserva, SUM(monto_total) as monto FROM reserva GROUP BY estado_reserva")
-
     fig1 = px.pie(df1, values='monto', names='estado_reserva', hole=0.6, template="plotly_dark")
     st.plotly_chart(fig1, use_container_width=True)
 
-    # ----- GRAFICO 2 -----
+    # Gráfico 2
     df2 = run_query("SELECT fecha_reserva, monto_total FROM reserva ORDER BY fecha_reserva")
-
     if not df2.empty:
         fig2 = px.line(df2, x='fecha_reserva', y='monto_total', template="plotly_dark")
         st.plotly_chart(fig2, use_container_width=True)
 
-
 # =====================================================
-# 7. INTELIGENCIA DE HABITACIONES
+# 7. HABITACIONES
 # =====================================================
 
 elif menu == "🛏️ Inteligencia de Habitaciones":
 
     st.title("Análisis Inteligente de Habitaciones")
 
-    query = """
+    df = run_query("""
         SELECT t.tipo_cama, t.capacidad, COUNT(h.id_habitacion) as cantidad
         FROM habitacion h
         JOIN tipo_habitacion t ON h.id_tipo_habitacion = t.id_tipo_habitacion
         GROUP BY t.tipo_cama, t.capacidad
-    """
-
-    df = run_query(query)
+    """)
 
     fig = px.bar(df, x='tipo_cama', y='cantidad', color='capacidad', template="plotly_dark", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(df, use_container_width=True)
-
 
 # =====================================================
 # 8. ANÁLISIS FINANCIERO
@@ -219,7 +231,7 @@ elif menu == "🛏️ Inteligencia de Habitaciones":
 
 elif menu == "💰 Análisis Financiero":
 
-    st.title("Análisis Financiero del Hotel")
+    st.title("Análisis Financiero Profesional")
 
     df = run_query("SELECT estado_reserva, monto_total FROM reserva")
 
@@ -229,107 +241,73 @@ elif menu == "💰 Análisis Financiero":
     fig2 = px.histogram(df, x='monto_total', template="plotly_dark")
     st.plotly_chart(fig2, use_container_width=True)
 
-
 # =====================================================
-# 9. SERVICIOS PREMIUM
+# 9. SERVICIOS
 # =====================================================
 
 elif menu == "🍽️ Servicios Premium":
 
-    st.title("Análisis de Servicios Premium")
+    st.title("Servicios Premium del Hotel")
 
-    query = """
+    df = run_query("""
         SELECT s.nombre, SUM(d.precio_unitario) as total
         FROM detalle_reserva_servicios_especiales d
         JOIN servicios_especiales s ON d.id_servicios_especiales = s.id_servicios_especiales
         GROUP BY s.nombre
         ORDER BY total DESC
-    """
-
-    df = run_query(query)
+    """)
 
     fig = px.funnel(df, x='total', y='nombre', template="plotly_dark")
     st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(df, use_container_width=True)
 
-
 # =====================================================
-# 10. FIDELIDAD DE CLIENTES
+# 10. FIDELIDAD
 # =====================================================
 
 elif menu == "👥 Fidelidad de Clientes":
 
-    st.title("Clientes VIP y Fidelización")
+    st.title("Clientes VIP")
 
-    query = """
+    df = run_query("""
         SELECT c.nombre || ' ' || c.apellido_paterno as cliente, cf.puntos_acumulados
         FROM cliente c
         JOIN cliente_fidelidad cf ON c.id_cliente = cf.id_cliente_fidelidad
         ORDER BY cf.puntos_acumulados DESC
         LIMIT 10
-    """
-
-    df = run_query(query)
+    """)
 
     fig = px.line(df, x='cliente', y='puntos_acumulados', markers=True, template="plotly_dark")
     st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(df, use_container_width=True)
 
-
 # =====================================================
-# 11. TRANSPORTE Y LOGÍSTICA
+# 11. TRANSPORTE
 # =====================================================
 
 elif menu == "🚚 Transporte y Logística":
 
-    st.title("Logística de Transporte")
+    st.title("Logística del Hotel")
 
-    query = """
+    df = run_query("""
         SELECT r.origen || ' ➡️ ' || r.destino as trayecto, SUM(r.tarifa) as recaudacion
         FROM transporte_ruta tr
         JOIN ruta r ON tr.id_ruta = r.id_ruta
         GROUP BY trayecto
         ORDER BY recaudacion DESC
-    """
-
-    df = run_query(query)
+    """)
 
     fig = px.bar(df, x='recaudacion', y='trayecto', orientation='h', template="plotly_dark")
     st.plotly_chart(fig, use_container_width=True)
 
     st.dataframe(df, use_container_width=True)
 
-
 # =====================================================
-# 12. REPORTE AVANZADO (NUEVA SECCIÓN MÁS INTERACTIVA)
-# =====================================================
-
-elif menu == "📈 Reporte Avanzado":
-
-    st.title("Reporte Avanzado de Datos")
-
-    tabla = st.selectbox(
-        "Selecciona una tabla para analizar",
-        ["cliente", "reserva", "habitacion", "servicios_especiales"]
-    )
-
-    df = run_query(f"SELECT * FROM {tabla}")
-
-    st.dataframe(df, use_container_width=True)
-
-    if not df.empty:
-        columna = st.selectbox("Selecciona una columna numérica", df.select_dtypes(include='number').columns)
-
-        fig = px.histogram(df, x=columna, template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
-
-
-# =====================================================
-# 13. FOOTER PROFESIONAL
+# 12. FOOTER
 # =====================================================
 
 st.markdown("---")
 st.markdown("### Horizon Stay Business Intelligence Dashboard")
-st.caption(f"Actualizado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+st.caption(f"Última actualización: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
