@@ -161,7 +161,7 @@ def run_query(query):
 # =====================================================
 
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=120)
-st.sidebar.title("Horizon Stay BI")
+st.sidebar.title("Horizon Stay ")
 st.sidebar.markdown("### Inteligencia Empresarial del Hotel")
 st.sidebar.markdown("---")
 
