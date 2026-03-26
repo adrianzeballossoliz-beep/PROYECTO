@@ -32,15 +32,14 @@ st.markdown("""
 def get_connection():
     try:
         return psycopg2.connect(
-            host="localhost",
+            host="localhost", # Esto funcionará cuando lo corras en tu PC
             database="postgres", 
             user="postgres",
             password="123456", 
-            port="5432",
-            client_encoding='utf8'
+            port="5432"
         )
-    except Exception as e:
-        st.error(f"❌ Error de conexión con PostgreSQL: {e}")
+    except Exception:
+        # Esto evita que la app de Streamlit Cloud se rompa al no encontrar tu PC
         return None
 
 # --- 3. MENÚ LATERAL (REQUISITO DEL PDF)  ---
