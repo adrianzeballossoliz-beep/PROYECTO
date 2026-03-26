@@ -40,7 +40,7 @@ def get_connection():
             sslmode="require"
         )
     except Exception as e:
-        print(f"Error: {e}")
+        st.error(f"Error de conexión: {e}") # Esto nos dirá el error real en la web
         return None
 # --- 3. MENÚ LATERAL (REQUISITO DEL PDF)  ---
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=120)
