@@ -160,7 +160,7 @@ def run_query(query):
 # 5. SIDEBAR MODERNA
 # =====================================================
 
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=100)
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=80)
 st.sidebar.title("Horizon Stay")
 st.sidebar.markdown("### Inteligencia Empresarial del Hotel")
 st.sidebar.markdown("---")
