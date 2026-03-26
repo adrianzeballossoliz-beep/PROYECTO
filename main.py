@@ -33,7 +33,7 @@ def get_connection():
     try:
         return psycopg2.connect(
             host="dpg-d72c1sua2pns73etkvc0-a.oregon-postgres.render.com",
-            database="horizon_db",
+            database="horizon_stay",
             user="horizon_stay_user",
             password="AqabpaGhhPpU21CGLWazFG0zNvPOO1tw",
             port="5432",
