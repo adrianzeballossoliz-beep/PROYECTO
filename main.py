@@ -32,16 +32,16 @@ st.markdown("""
 def get_connection():
     try:
         return psycopg2.connect(
-            host="localhost", # Esto funcionará cuando lo corras en tu PC
-            database="postgres", 
-            user="postgres",
-            password="123456", 
-            port="5432"
+            host="dpg-d72c1sua2pns73etkvc0-a.oregon-postgres.render.com",
+            database="horizon_stay",
+            user="horizon_stay_user",
+            password="AqabpaGhhPpU21CGLWazFG0zNvPOO1tw",
+            port="5432",
+            sslmode="require"
         )
-    except Exception:
-        # Esto evita que la app de Streamlit Cloud se rompa al no encontrar tu PC
+    except Exception as e:
+        print(f"Error: {e}")
         return None
-
 # --- 3. MENÚ LATERAL (REQUISITO DEL PDF)  ---
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=120)
 st.sidebar.title("Horizon Stay BI")
