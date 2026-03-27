@@ -1,141 +1,33 @@
-# =====================================================
-# HORIZON STAY - DASHBOARD BI ULTRA PROFESIONAL 2.0
-# Diseño extremo • Fondo dinámico • Interactividad avanzada • UI moderna
-# =====================================================
-
 import streamlit as st
 import pandas as pd
 import psycopg2
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
-import numpy as np
 
 # =====================================================
-# 1. CONFIGURACIÓN GENERAL
+# CONFIGURACIÓN DE PÁGINA Y ESTILOS (Mantenidos tus estilos neón)
 # =====================================================
-
 st.set_page_config(
-    page_title="Horizon Stay ",
+    page_title="Horizon Stay BI",
     page_icon="🏨",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# =====================================================
-# 2. FONDO NEGRO ULTRA ANIMADO + EFECTOS VISUALES
-# =====================================================
-
 st.markdown("""
 <style>
-
-/* Fondo animado profesional tipo Power BI oscuro */
-body {
-    background: linear-gradient(-45deg, #020202, #05070b, #071019, #020202);
-    background-size: 500% 500%;
-    animation: gradientBG 15s ease infinite;
-}
-
-@keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-}
-
-/* Partículas simuladas */
-.main::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 20% 30%, rgba(0,255,200,0.05), transparent 40%),
-                radial-gradient(circle at 80% 70%, rgba(0,140,255,0.05), transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(255,0,200,0.05), transparent 40%);
-    z-index: -1;
-}
-
-/* TÍTULO NEÓN */
-h1 {
-    font-size: 48px !important;
-    font-weight: 900 !important;
-    text-align: center;
-    background: linear-gradient(90deg, #00f2ff, #00ff95, #ff00ea);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 1px;
-}
-
-/* Subtítulo */
-h2, h3 {
-    color: white !important;
-}
-
-/* TARJETAS KPI MEJORADAS */
-.stMetric {
-    background: rgba(10, 15, 25, 0.75);
-    backdrop-filter: blur(12px);
-    padding: 30px;
-    border-radius: 25px;
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0px 12px 35px rgba(0,0,0,0.7);
-    transition: 0.35s ease;
-}
-
-.stMetric:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0px 18px 50px rgba(0,255,200,0.25);
-}
-
-/* SIDEBAR PRO */
-section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #010101, #04070c);
-}
-
-/* BOTONES ULTRA INTERACTIVOS */
-.stButton > button {
-    background: linear-gradient(90deg, #00f2ff, #00ff95);
-    border-radius: 14px;
-    padding: 14px 26px;
-    border: none;
-    font-weight: bold;
-    color: black;
-    transition: 0.3s ease;
-}
-
-.stButton > button:hover {
-    transform: scale(1.07);
-    box-shadow: 0px 0px 25px #00ffd0;
-}
-
-/* TABLAS BONITAS */
-.stDataFrame {
-    background: rgba(10,14,20,0.75);
-    border-radius: 20px;
-}
-
-/* RADIO BUTTON PRO */
-.stRadio > div {
-    background: rgba(10,15,25,0.7);
-    padding: 15px;
-    border-radius: 15px;
-}
-
-/* DIVIDER NEÓN */
-hr {
-    border: none;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #00ffd0, transparent);
-}
-
+    body { background: linear-gradient(-45deg, #020202, #05070b, #071019, #020202); background-size: 500% 500%; animation: gradientBG 15s ease infinite; }
+    @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+    h1 { font-size: 42px !important; font-weight: 900 !important; text-align: center; background: linear-gradient(90deg, #00f2ff, #00ff95, #ff00ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stMetric { background: rgba(10, 15, 25, 0.75); backdrop-filter: blur(12px); padding: 25px; border-radius: 20px; border: 1px solid rgba(0,255,200,0.2); transition: 0.3s; }
+    .stMetric:hover { transform: translateY(-5px); border-color: #00ff95; }
 </style>
 """, unsafe_allow_html=True)
 
 # =====================================================
-# 3. CONEXIÓN A POSTGRESQL
+# CONEXIÓN A BASE DE DATOS
 # =====================================================
-
 @st.cache_resource
 def get_connection():
     return psycopg2.connect(
@@ -147,184 +39,155 @@ def get_connection():
         sslmode="require"
     )
 
-# =====================================================
-# 4. FUNCIÓN GLOBAL CONSULTAS
-# =====================================================
-
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60) # Actualización cada minuto para datos OLAP
 def run_query(query):
-    conn = get_connection()
-    return pd.read_sql(query, conn)
+    try:
+        conn = get_connection()
+        return pd.read_sql(query, conn)
+    except Exception as e:
+        st.error(f"Error de conexión: {e}")
+        return pd.DataFrame()
 
 # =====================================================
-# 5. SIDEBAR MODERNA
+# SIDEBAR NAVEGACIÓN (8 CUBOS OLAP)
 # =====================================================
-
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=80)
-st.sidebar.title("Horizon Stay")
-st.sidebar.markdown("### Inteligencia Empresarial del Hotel")
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=70)
+st.sidebar.title("Horizon Stay BI")
 st.sidebar.markdown("---")
 
-menu = st.sidebar.radio(
-    "Selecciona una sección:",
+menu = st.sidebar.selectbox(
+    "Selecciona un Cubo OLAP:",
     [
         "📊 Dashboard Ejecutivo",
-        "🛏️ Habitaciones Inteligentes",
-        "💰 Análisis Financiero",
-        "🍽️ Servicios Premium",
-        "👥 Fidelidad de Clientes",
-        "🚚 Transporte y Logística",
-        "📈 Reporte Inteligente"
+        "💰 Análisis de Ingresos (Cubo 1)",
+        "🛏️ Ocupación e Inventario (Cubo 2)",
+        "✨ Servicios Premium (Cubo 3)",
+        "🚚 Logística y Rutas (Cubo 4)",
+        "👥 CRM y Fidelización (Cubo 5)",
+        "📈 Marketing y Promos (Cubo 6)",
+        "🎭 Eventos y Auditoría (Cubo 7-8)"
     ]
 )
 
 # =====================================================
-# 6. DASHBOARD EJECUTIVO ULTRA PRO
+# SECCIÓN 1: DASHBOARD EJECUTIVO (Resumen General)
 # =====================================================
-
 if menu == "📊 Dashboard Ejecutivo":
-
     st.title("Horizon Stay Business Intelligence")
-    st.markdown("### Panel avanzado con analítica en tiempo real")
-
+    
+    # KPIs rápidos usando funciones OLAP
     col1, col2, col3, col4 = st.columns(4)
+    
+    ingresos_total = run_query("SELECT SUM(total) FROM olap_rev_total_mensual()").iloc[0,0] or 0
+    ticket_avg = run_query("SELECT * FROM olap_rev_ticket_promedio()").iloc[0,0] or 0
+    puntos_total = run_query("SELECT * FROM olap_crm_puntos_acumulados_total()").iloc[0,0] or 0
+    ratio_cancela = run_query("SELECT COUNT(*) FROM reserva WHERE estado_reserva='cancelada'").iloc[0,0]
 
-    ingresos = run_query("SELECT COALESCE(SUM(monto_total),0) FROM reserva WHERE estado_reserva='confirmada'").iloc[0,0]
-    clientes = run_query("SELECT COUNT(*) FROM cliente").iloc[0,0]
-    reservas = run_query("SELECT COUNT(*) FROM reserva").iloc[0,0]
-    servicios = run_query("SELECT COUNT(*) FROM servicios_especiales").iloc[0,0]
-
-    col1.metric("Ingresos Totales", f"{ingresos:,.0f} Bs")
-    col2.metric("Clientes", clientes)
-    col3.metric("Reservas", reservas)
-    col4.metric("Servicios Premium", servicios)
+    col1.metric("Ingresos Confirmados", f"{ingresos_total:,.2f} Bs")
+    col2.metric("Ticket Promedio", f"{ticket_avg:,.2f} Bs")
+    col3.metric("Puntos en Circulación", f"{puntos_total:,.0f} pts")
+    col4.metric("Reservas Canceladas", ratio_cancela, delta_color="inverse")
 
     st.markdown("---")
-
-    # GRÁFICO DONUT PROFESIONAL
-    df1 = run_query("SELECT estado_reserva, SUM(monto_total) as monto FROM reserva GROUP BY estado_reserva")
-
-    fig1 = px.pie(
-        df1,
-        values='monto',
-        names='estado_reserva',
-        hole=0.65,
-        template="plotly_dark"
-    )
-
-    fig1.update_traces(textfont_size=14)
-    st.plotly_chart(fig1, use_container_width=True)
-
-    # GRÁFICO LINEA ANIMADO
-    df2 = run_query("SELECT fecha_reserva, monto_total FROM reserva ORDER BY fecha_reserva")
-
-    fig2 = px.line(df2, x='fecha_reserva', y='monto_total', template="plotly_dark")
-    fig2.update_traces(mode='lines+markers')
-    st.plotly_chart(fig2, use_container_width=True)
+    
+    # Gráfico de Tendencia Mensual
+    st.subheader("📈 Tendencia de Ingresos Mensuales")
+    df_ventas = run_query("SELECT * FROM olap_rev_total_mensual()")
+    fig_ventas = px.area(df_ventas, x='periodo', y='total', template="plotly_dark", color_discrete_sequence=['#00f2ff'])
+    st.plotly_chart(fig_ventas, use_container_width=True)
 
 # =====================================================
-# 7. HABITACIONES INTELIGENTES
+# SECCIÓN 2: CUBO 1 - ANÁLISIS FINANCIERO
 # =====================================================
-
-elif menu == "🛏️ Habitaciones Inteligentes":
-
-    st.title("Análisis Inteligente de Habitaciones")
-
-    df = run_query("""
-        SELECT t.tipo_cama, t.capacidad, COUNT(h.id_habitacion) as cantidad
-        FROM habitacion h
-        JOIN tipo_habitacion t ON h.id_tipo_habitacion = t.id_tipo_habitacion
-        GROUP BY t.tipo_cama, t.capacidad
-    """)
-
-    fig = px.bar(df, x='tipo_cama', y='cantidad', color='capacidad', template="plotly_dark", text_auto=True)
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.dataframe(df, use_container_width=True)
-
-# =====================================================
-# 8. ANÁLISIS FINANCIERO PRO
-# =====================================================
-
-elif menu == "💰 Análisis Financiero":
-
-    st.title("Análisis Financiero Profesional")
-
-    df = run_query("SELECT estado_reserva, monto_total FROM reserva")
-
-    fig = px.box(df, x='estado_reserva', y='monto_total', template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
-
-    fig2 = px.histogram(df, x='monto_total', template="plotly_dark")
-    st.plotly_chart(fig2, use_container_width=True)
+elif menu == "💰 Análisis de Ingresos (Cubo 1)":
+    st.title("Análisis de Ingresos y Facturación")
+    
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.subheader("Métodos de Pago Preferidos")
+        df_pagos = run_query("SELECT * FROM olap_rev_por_metodo_pago()")
+        fig_pagos = px.pie(df_pagos, values='total', names='metodo', hole=0.5, template="plotly_dark")
+        st.plotly_chart(fig_pagos, use_container_width=True)
+        
+    with c2:
+        st.subheader("Proyección de Ingresos Pendientes")
+        df_pend = run_query("SELECT * FROM olap_rev_proyeccion_pendientes()")
+        st.metric("Monto por Cobrar", f"{df_pend.iloc[0,0]:,.2f} Bs")
+        st.info("Este monto corresponde a reservas en estado 'pendiente'.")
 
 # =====================================================
-# 9. SERVICIOS PREMIUM
+# SECCIÓN 3: CUBO 2 - OCUPACIÓN
 # =====================================================
-
-elif menu == "🍽️ Servicios Premium":
-
-    st.title("Servicios Premium del Hotel")
-
-    df = run_query("""
-        SELECT s.nombre, SUM(d.precio_unitario) as total
-        FROM detalle_reserva_servicios_especiales d
-        JOIN servicios_especiales s ON d.id_servicios_especiales = s.id_servicios_especiales
-        GROUP BY s.nombre
-        ORDER BY total DESC
-    """)
-
-    fig = px.funnel(df, x='total', y='nombre', template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.dataframe(df, use_container_width=True)
+elif menu == "🛏️ Ocupación e Inventario (Cubo 2)":
+    st.title("Ocupación e Inventario")
+    
+    df_occ = run_query("SELECT * FROM olap_occ_por_tipo_habitacion()")
+    fig_occ = px.bar(df_occ, x='tipo', y='total_reservas', color='total_reservas', template="plotly_dark", title="Reservas por Categoría")
+    st.plotly_chart(fig_occ, use_container_width=True)
+    
+    col_a, col_b = st.columns(2)
+    df_real = run_query("SELECT * FROM olap_occ_disponibilidad_real_time()")
+    col_a.plotly_chart(px.pie(df_real, values='cantidad', names='estado', title="Estado Actual del Hotel"), use_container_width=True)
+    
+    df_piso = run_query("SELECT * FROM olap_occ_piso_mas_rentable()")
+    col_b.plotly_chart(px.bar(df_piso, x='piso', y='ingresos', title="Rentabilidad por Piso"), use_container_width=True)
 
 # =====================================================
-# 10. FIDELIDAD DE CLIENTES
+# SECCIÓN 4: CUBO 4 - LOGÍSTICA
 # =====================================================
-
-elif menu == "👥 Fidelidad de Clientes":
-
-    st.title("Clientes VIP")
-
-    df = run_query("""
-        SELECT c.nombre || ' ' || c.apellido_paterno as cliente, cf.puntos_acumulados
-        FROM cliente c
-        JOIN cliente_fidelidad cf ON c.id_cliente = cf.id_cliente_fidelidad
-        ORDER BY cf.puntos_acumulados DESC
-        LIMIT 10
-    """)
-
-    fig = px.line(df, x='cliente', y='puntos_acumulados', markers=True, template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.dataframe(df, use_container_width=True)
+elif menu == "🚚 Logística y Rutas (Cubo 4)":
+    st.title("Logística de Transporte")
+    
+    df_rutas = run_query("SELECT * FROM olap_tra_rutas_mas_solicitadas()")
+    fig_rutas = px.bar(df_rutas, x='cantidad', y='ruta_nombre', orientation='h', template="plotly_dark", color='cantidad')
+    st.plotly_chart(fig_rutas, use_container_width=True)
+    
+    st.subheader("Estado de la Flota")
+    df_flota = run_query("SELECT * FROM olap_tra_disponibilidad_vehicular()")
+    st.table(df_flota)
 
 # =====================================================
-# 11. TRANSPORTE Y LOGÍSTICA
+# SECCIÓN 5: CUBO 5 - CRM
 # =====================================================
-
-elif menu == "🚚 Transporte y Logística":
-
-    st.title("Logística del Hotel")
-
-    df = run_query("""
-        SELECT r.origen || ' ➡️ ' || r.destino as trayecto, SUM(r.tarifa) as recaudacion
-        FROM transporte_ruta tr
-        JOIN ruta r ON tr.id_ruta = r.id_ruta
-        GROUP BY trayecto
-        ORDER BY recaudacion DESC
-    """)
-
-    fig = px.bar(df, x='recaudacion', y='trayecto', orientation='h', template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.dataframe(df, use_container_width=True)
+elif menu == "👥 CRM y Fidelización (Cubo 5)":
+    st.title("Gestión de Clientes VIP")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.subheader("Segmentación por Nivel")
+        df_niv = run_query("SELECT * FROM olap_crm_segmentacion_niveles()")
+        st.plotly_chart(px.pie(df_niv, names='nivel', values='total_clientes', template="plotly_dark"), use_container_width=True)
+        
+    with col2:
+        st.subheader("Top 10 Clientes VIP (Gasto)")
+        df_gastadores = run_query("SELECT * FROM olap_crm_top_10_gastadores()")
+        st.dataframe(df_gastadores, use_container_width=True)
 
 # =====================================================
-# 12. FOOTER DINÁMICO
+# SECCIÓN 6: CUBOS 7 Y 8 - AUDITORÍA
 # =====================================================
+elif menu == "🎭 Eventos y Auditoría (Cubo 7-8)":
+    st.title("Control de Calidad y Auditoría")
+    
+    tab1, tab2 = st.tabs(["Eventos", "Auditoría Financiera"])
+    
+    with tab1:
+        df_eve = run_query("SELECT * FROM olap_eve_ingresos_paquetes()")
+        st.plotly_chart(px.funnel(df_eve, x='ingresos', y='paquete', title="Ingresos por Paquete de Eventos"), use_container_width=True)
+        
+    with tab2:
+        df_audit = run_query("SELECT * FROM olap_aud_facturacion_vs_pagos()")
+        st.subheader("Balance Facturación vs Pagos Reales")
+        st.dataframe(df_audit)
+        
+        df_impagos = run_query("SELECT * FROM olap_aud_resumen_impagos()")
+        st.warning("Lista de Clientes con Pagos Pendientes")
+        st.dataframe(df_impagos)
 
+# =====================================================
+# FOOTER
+# =====================================================
 st.markdown("---")
-st.markdown("### Horizon Stay Business Intelligence Dashboard")
-st.caption(f"Última actualización: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+st.caption(f"🚀 Sistema de Inteligencia de Negocios Horizon Stay | {datetime.now().strftime('%Y')} | Powered by PostgreSQL OLAP Functions")
