@@ -169,7 +169,7 @@ elif menu == "Cubo 8: Auditoría":
 
 # FOOTER
 st.sidebar.markdown("---")
-st.sidebar.info(f"👤 **Analista:** Adrian\n\n📅 **Fecha:** {datetime.now().strftime('%d/%m/%Y')}")
+st.sidebar.info(f"👤 **Analista** \n\n📅 **Fecha:** {datetime.now().strftime('%d/%m/%Y')}")
 
 if st.sidebar.button("♻️ Refrescar Datos"):
     st.cache_resource.clear()
