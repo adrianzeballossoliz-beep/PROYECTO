@@ -2,31 +2,47 @@ import streamlit as st
 import pandas as pd
 import psycopg2
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime
 
 # =====================================================
-# CONFIGURACIÓN DE PÁGINA Y ESTILOS (Mantenidos tus estilos neón)
+# 1. CONFIGURACIÓN Y ESTILO VISUAL NEÓN
 # =====================================================
-st.set_page_config(
-    page_title="Horizon Stay BI",
-    page_icon="🏨",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Horizon Stay BI - Pro", page_icon="🏨", layout="wide")
 
 st.markdown("""
 <style>
-    body { background: linear-gradient(-45deg, #020202, #05070b, #071019, #020202); background-size: 500% 500%; animation: gradientBG 15s ease infinite; }
-    @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
-    h1 { font-size: 42px !important; font-weight: 900 !important; text-align: center; background: linear-gradient(90deg, #00f2ff, #00ff95, #ff00ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .stMetric { background: rgba(10, 15, 25, 0.75); backdrop-filter: blur(12px); padding: 25px; border-radius: 20px; border: 1px solid rgba(0,255,200,0.2); transition: 0.3s; }
-    .stMetric:hover { transform: translateY(-5px); border-color: #00ff95; }
+    body { background-color: #020202; }
+    .stApp {
+        background: radial-gradient(circle at top right, #071019, #020202);
+    }
+    h1 { 
+        font-size: 45px !important; 
+        font-weight: 900 !important; 
+        text-align: center; 
+        background: linear-gradient(90deg, #00f2ff, #7000ff, #00ff95); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0px 10px 20px rgba(0,242,255,0.3);
+    }
+    h2, h3 { color: #00ffd0 !important; text-shadow: 0 0 10px rgba(0,255,208,0.5); }
+    .stMetric { 
+        background: rgba(10, 15, 25, 0.6); 
+        backdrop-filter: blur(12px); 
+        padding: 25px; 
+        border-radius: 15px; 
+        border: 1px solid rgba(0,255,200,0.3); 
+        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.8);
+    }
+    [data-testid="stSidebar"] { 
+        background: #010101; 
+        border-right: 2px solid #7000ff; 
+    }
+    .stDataFrame { border: 1px solid #7000ff; border-radius: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
 # =====================================================
-# CONEXIÓN A BASE DE DATOS
+# 2. CONEXIÓN A LA BASE DE DATOS (RENDER)
 # =====================================================
 @st.cache_resource
 def get_connection():
@@ -39,155 +55,122 @@ def get_connection():
         sslmode="require"
     )
 
-@st.cache_data(ttl=60) # Actualización cada minuto para datos OLAP
 def run_query(query):
     try:
         conn = get_connection()
-        return pd.read_sql(query, conn)
+        # Usamos query directo para evitar warnings de SQLAlchemy
+        df = pd.read_sql(query, conn)
+        return df
     except Exception as e:
-        st.error(f"Error de conexión: {e}")
+        st.error(f"⚠️ Error de Conexión/Consulta: {e}")
         return pd.DataFrame()
 
 # =====================================================
-# SIDEBAR NAVEGACIÓN (8 CUBOS OLAP)
+# 3. COMPONENTE GENÉRICO DE RENDERIZADO
 # =====================================================
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=70)
+def render_cubo(titulo, vistas, etiquetas_tabs, tipos_graficos):
+    st.markdown(f"<h1>{titulo}</h1>", unsafe_allow_html=True)
+    
+    # Verificación de seguridad para evitar errores de índice
+    num_tabs = min(len(vistas), len(etiquetas_tabs), len(tipos_graficos))
+    tabs = st.tabs(etiquetas_tabs[:num_tabs])
+    
+    for i in range(num_tabs):
+        with tabs[i]:
+            df = run_query(f"SELECT * FROM {vistas[i]}")
+            
+            if df.empty:
+                st.info(f"🌑 La vista '{vistas[i]}' no tiene datos o no existe. Ejecuta el poblado en DBeaver.")
+                continue
+            
+            # Lógica de Gráficos
+            if tipos_graficos[i] == "line":
+                fig = px.line(df, x=df.columns[0], y=df.columns[1], template="plotly_dark", 
+                             markers=True, color_discrete_sequence=['#00f2ff'])
+                st.plotly_chart(fig, use_container_width=True)
+                
+            elif tipos_graficos[i] == "bar":
+                fig = px.bar(df, x=df.columns[0], y=df.columns[1], color=df.columns[0], 
+                            template="plotly_dark", color_discrete_sequence=px.colors.sequential.Electric)
+                st.plotly_chart(fig, use_container_width=True)
+                
+            elif tipos_graficos[i] == "pie":
+                fig = px.pie(df, names=df.columns[0], values=df.columns[1], hole=0.5, 
+                            template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Prism)
+                st.plotly_chart(fig, use_container_width=True)
+                
+            elif tipos_graficos[i] == "metric":
+                val = df.iloc[0,0]
+                label = vistas[i].replace('v_', '').replace('_', ' ').title()
+                st.metric(label=label, value=val)
+                st.dataframe(df, use_container_width=True)
+
+# =====================================================
+# 4. SIDEBAR Y NAVEGACIÓN
+# =====================================================
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2983/2983973.png", width=80)
 st.sidebar.title("Horizon Stay BI")
 st.sidebar.markdown("---")
 
-menu = st.sidebar.selectbox(
-    "Selecciona un Cubo OLAP:",
-    [
-        "📊 Dashboard Ejecutivo",
-        "💰 Análisis de Ingresos (Cubo 1)",
-        "🛏️ Ocupación e Inventario (Cubo 2)",
-        "✨ Servicios Premium (Cubo 3)",
-        "🚚 Logística y Rutas (Cubo 4)",
-        "👥 CRM y Fidelización (Cubo 5)",
-        "📈 Marketing y Promos (Cubo 6)",
-        "🎭 Eventos y Auditoría (Cubo 7-8)"
-    ]
-)
+menu = st.sidebar.selectbox("Selecciona un Cubo OLAP:", [
+    "Cubo 1: Financiero", "Cubo 2: Ocupación", "Cubo 3: Servicios",
+    "Cubo 4: Logística", "Cubo 5: CRM", "Cubo 6: Marketing",
+    "Cubo 7: Eventos", "Cubo 8: Auditoría"
+])
 
-# =====================================================
-# SECCIÓN 1: DASHBOARD EJECUTIVO (Resumen General)
-# =====================================================
-if menu == "📊 Dashboard Ejecutivo":
-    st.title("Horizon Stay Business Intelligence")
-    
-    # KPIs rápidos usando funciones OLAP
-    col1, col2, col3, col4 = st.columns(4)
-    
-    ingresos_total = run_query("SELECT SUM(total) FROM olap_rev_total_mensual()").iloc[0,0] or 0
-    ticket_avg = run_query("SELECT * FROM olap_rev_ticket_promedio()").iloc[0,0] or 0
-    puntos_total = run_query("SELECT * FROM olap_crm_puntos_acumulados_total()").iloc[0,0] or 0
-    ratio_cancela = run_query("SELECT COUNT(*) FROM reserva WHERE estado_reserva='cancelada'").iloc[0,0]
+# MAPEO DE CUBOS
+if menu == "Cubo 1: Financiero":
+    render_cubo("💰 Inteligencia Financiera", 
+                ["v_rev_mensual", "v_rev_metodo_pago"], 
+                ["📅 Ingresos Mensuales", "💳 Métodos de Pago"],
+                ["line", "pie"])
 
-    col1.metric("Ingresos Confirmados", f"{ingresos_total:,.2f} Bs")
-    col2.metric("Ticket Promedio", f"{ticket_avg:,.2f} Bs")
-    col3.metric("Puntos en Circulación", f"{puntos_total:,.0f} pts")
-    col4.metric("Reservas Canceladas", ratio_cancela, delta_color="inverse")
+elif menu == "Cubo 2: Ocupación":
+    render_cubo("🏨 Gestión de Ocupación", 
+                ["v_occ_piso", "v_occ_estadia"], 
+                ["🏢 Por Piso", "⏳ Promedio Estadía"],
+                ["bar", "metric"])
 
-    st.markdown("---")
-    
-    # Gráfico de Tendencia Mensual
-    st.subheader("📈 Tendencia de Ingresos Mensuales")
-    df_ventas = run_query("SELECT * FROM olap_rev_total_mensual()")
-    fig_ventas = px.area(df_ventas, x='periodo', y='total', template="plotly_dark", color_discrete_sequence=['#00f2ff'])
-    st.plotly_chart(fig_ventas, use_container_width=True)
+elif menu == "Cubo 3: Servicios":
+    render_cubo("💎 Upselling & Servicios", 
+                ["v_srv_populares", "v_srv_uso_transporte"], 
+                ["⭐ Top Servicios", "🚐 Uso Transporte"],
+                ["bar", "pie"])
 
-# =====================================================
-# SECCIÓN 2: CUBO 1 - ANÁLISIS FINANCIERO
-# =====================================================
-elif menu == "💰 Análisis de Ingresos (Cubo 1)":
-    st.title("Análisis de Ingresos y Facturación")
-    
-    c1, c2 = st.columns(2)
-    
-    with c1:
-        st.subheader("Métodos de Pago Preferidos")
-        df_pagos = run_query("SELECT * FROM olap_rev_por_metodo_pago()")
-        fig_pagos = px.pie(df_pagos, values='total', names='metodo', hole=0.5, template="plotly_dark")
-        st.plotly_chart(fig_pagos, use_container_width=True)
-        
-    with c2:
-        st.subheader("Proyección de Ingresos Pendientes")
-        df_pend = run_query("SELECT * FROM olap_rev_proyeccion_pendientes()")
-        st.metric("Monto por Cobrar", f"{df_pend.iloc[0,0]:,.2f} Bs")
-        st.info("Este monto corresponde a reservas en estado 'pendiente'.")
+elif menu == "Cubo 4: Logística":
+    render_cubo("🗺️ Logística Horizon", 
+                ["v_tra_rutas_top", "v_tra_disponibilidad"], 
+                ["📍 Rutas Populares", "🚐 Disponibilidad Flota"],
+                ["bar", "pie"])
 
-# =====================================================
-# SECCIÓN 3: CUBO 2 - OCUPACIÓN
-# =====================================================
-elif menu == "🛏️ Ocupación e Inventario (Cubo 2)":
-    st.title("Ocupación e Inventario")
-    
-    df_occ = run_query("SELECT * FROM olap_occ_por_tipo_habitacion()")
-    fig_occ = px.bar(df_occ, x='tipo', y='total_reservas', color='total_reservas', template="plotly_dark", title="Reservas por Categoría")
-    st.plotly_chart(fig_occ, use_container_width=True)
-    
-    col_a, col_b = st.columns(2)
-    df_real = run_query("SELECT * FROM olap_occ_disponibilidad_real_time()")
-    col_a.plotly_chart(px.pie(df_real, values='cantidad', names='estado', title="Estado Actual del Hotel"), use_container_width=True)
-    
-    df_piso = run_query("SELECT * FROM olap_occ_piso_mas_rentable()")
-    col_b.plotly_chart(px.bar(df_piso, x='piso', y='ingresos', title="Rentabilidad por Piso"), use_container_width=True)
+elif menu == "Cubo 5: CRM":
+    render_cubo("👥 Fidelización (CRM)", 
+                ["v_crm_niveles", "v_crm_retorno"], 
+                ["🏆 Distribución VIP", "🔄 Tasa de Retorno"],
+                ["bar", "pie"])
 
-# =====================================================
-# SECCIÓN 4: CUBO 4 - LOGÍSTICA
-# =====================================================
-elif menu == "🚚 Logística y Rutas (Cubo 4)":
-    st.title("Logística de Transporte")
-    
-    df_rutas = run_query("SELECT * FROM olap_tra_rutas_mas_solicitadas()")
-    fig_rutas = px.bar(df_rutas, x='cantidad', y='ruta_nombre', orientation='h', template="plotly_dark", color='cantidad')
-    st.plotly_chart(fig_rutas, use_container_width=True)
-    
-    st.subheader("Estado de la Flota")
-    df_flota = run_query("SELECT * FROM olap_tra_disponibilidad_vehicular()")
-    st.table(df_flota)
+elif menu == "Cubo 6: Marketing":
+    render_cubo("📈 Impacto de Marketing", 
+                ["v_mkt_impacto_dto", "v_mkt_temporadas"], 
+                ["🎟️ % Descuento", "🌦️ Ingreso Temporada"],
+                ["metric", "line"])
 
-# =====================================================
-# SECCIÓN 5: CUBO 5 - CRM
-# =====================================================
-elif menu == "👥 CRM y Fidelización (Cubo 5)":
-    st.title("Gestión de Clientes VIP")
-    
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        st.subheader("Segmentación por Nivel")
-        df_niv = run_query("SELECT * FROM olap_crm_segmentacion_niveles()")
-        st.plotly_chart(px.pie(df_niv, names='nivel', values='total_clientes', template="plotly_dark"), use_container_width=True)
-        
-    with col2:
-        st.subheader("Top 10 Clientes VIP (Gasto)")
-        df_gastadores = run_query("SELECT * FROM olap_crm_top_10_gastadores()")
-        st.dataframe(df_gastadores, use_container_width=True)
+elif menu == "Cubo 7: Eventos":
+    render_cubo("🎭 Análisis de Eventos", 
+                ["v_eve_ingresos", "v_eve_capacidad"], 
+                ["💵 Ingreso Paquete", "👥 Capacidad Media"],
+                ["bar", "metric"])
 
-# =====================================================
-# SECCIÓN 6: CUBOS 7 Y 8 - AUDITORÍA
-# =====================================================
-elif menu == "🎭 Eventos y Auditoría (Cubo 7-8)":
-    st.title("Control de Calidad y Auditoría")
-    
-    tab1, tab2 = st.tabs(["Eventos", "Auditoría Financiera"])
-    
-    with tab1:
-        df_eve = run_query("SELECT * FROM olap_eve_ingresos_paquetes()")
-        st.plotly_chart(px.funnel(df_eve, x='ingresos', y='paquete', title="Ingresos por Paquete de Eventos"), use_container_width=True)
-        
-    with tab2:
-        df_audit = run_query("SELECT * FROM olap_aud_facturacion_vs_pagos()")
-        st.subheader("Balance Facturación vs Pagos Reales")
-        st.dataframe(df_audit)
-        
-        df_impagos = run_query("SELECT * FROM olap_aud_resumen_impagos()")
-        st.warning("Lista de Clientes con Pagos Pendientes")
-        st.dataframe(df_impagos)
+elif menu == "Cubo 8: Auditoría":
+    render_cubo("🛡️ Auditoría de Calidad", 
+                ["v_aud_cancelaciones", "v_aud_balance"], 
+                ["🚫 Estado Reservas", "⚖️ Balance Real"],
+                ["pie", "bar"])
 
-# =====================================================
 # FOOTER
-# =====================================================
-st.markdown("---")
-st.caption(f"🚀 Sistema de Inteligencia de Negocios Horizon Stay | {datetime.now().strftime('%Y')} | Powered by PostgreSQL OLAP Functions")
+st.sidebar.markdown("---")
+st.sidebar.info(f"👤 **Analista:** Adrian\n\n📅 **Fecha:** {datetime.now().strftime('%d/%m/%Y')}")
+
+if st.sidebar.button("♻️ Refrescar Datos"):
+    st.cache_resource.clear()
+    st.rerun()
