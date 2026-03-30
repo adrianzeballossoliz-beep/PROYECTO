@@ -47,63 +47,58 @@ st.markdown("""
 @st.cache_resource
 def get_connection():
     return psycopg2.connect(
-        host="dpg-d72c1sua2pns73etkvc0-a.oregon-postgres.render.com",
-        database="horizon_stay",
-        user="horizon_stay_user",
-        password="AqabpaGhhPpU21CGLWazFG0zNvPOO1tw",
-        port="5432",
-        sslmode="require"
+        host="localhost",           # Cambiado a servidor local
+        database="postgres",    # Asegúrate de que el nombre sea igual en tu pgAdmin/DBeaver
+        user="postgres",            # Usuario por defecto de PostgreSQL local
+        password="123456",   # La contraseña que configuraste al instalar Postgres
+        port="5432"                 # Puerto estándar
+        # sslmode="require"         # Generalmente no es necesario en localhost
     )
 
 def run_query(query):
     try:
         conn = get_connection()
-        # Usamos query directo para evitar warnings de SQLAlchemy
+        # Nota: pd.read_sql suele requerir cerrar la conexión o usar un context manager
         df = pd.read_sql(query, conn)
         return df
     except Exception as e:
-        st.error(f"⚠️ Error de Conexión/Consulta: {e}")
+        st.error(f"⚠️ Error de Conexión/Consulta Local: {e}")
         return pd.DataFrame()
-
 # =====================================================
 # 3. COMPONENTE GENÉRICO DE RENDERIZADO
 # =====================================================
 def render_cubo(titulo, vistas, etiquetas_tabs, tipos_graficos):
     st.markdown(f"<h1>{titulo}</h1>", unsafe_allow_html=True)
+    tabs = st.tabs(etiquetas_tabs)
     
-    # Verificación de seguridad para evitar errores de índice
-    num_tabs = min(len(vistas), len(etiquetas_tabs), len(tipos_graficos))
-    tabs = st.tabs(etiquetas_tabs[:num_tabs])
-    
-    for i in range(num_tabs):
-        with tabs[i]:
+    for i, tab in enumerate(tabs):
+        with tab:
             df = run_query(f"SELECT * FROM {vistas[i]}")
             
             if df.empty:
-                st.info(f"🌑 La vista '{vistas[i]}' no tiene datos o no existe. Ejecuta el poblado en DBeaver.")
+                st.info(f"🌑 La vista '{vistas[i]}' está esperando datos de población o corrección en SQL.")
                 continue
             
-            # Lógica de Gráficos
             if tipos_graficos[i] == "line":
-                fig = px.line(df, x=df.columns[0], y=df.columns[1], template="plotly_dark", 
-                             markers=True, color_discrete_sequence=['#00f2ff'])
+                fig = px.line(df, x=df.columns[0], y=df.columns[1], template="plotly_dark", markers=True, color_discrete_sequence=['#00f2ff'])
                 st.plotly_chart(fig, use_container_width=True)
                 
             elif tipos_graficos[i] == "bar":
-                fig = px.bar(df, x=df.columns[0], y=df.columns[1], color=df.columns[0], 
-                            template="plotly_dark", color_discrete_sequence=px.colors.sequential.Electric)
+                fig = px.bar(df, x=df.columns[0], y=df.columns[1], color=df.columns[0], template="plotly_dark", color_discrete_sequence=px.colors.sequential.Electric)
                 st.plotly_chart(fig, use_container_width=True)
                 
             elif tipos_graficos[i] == "pie":
-                fig = px.pie(df, names=df.columns[0], values=df.columns[1], hole=0.5, 
-                            template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Prism)
+                fig = px.pie(df, names=df.columns[0], values=df.columns[1], hole=0.6, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel)
                 st.plotly_chart(fig, use_container_width=True)
                 
             elif tipos_graficos[i] == "metric":
-                val = df.iloc[0,0]
-                label = vistas[i].replace('v_', '').replace('_', ' ').title()
-                st.metric(label=label, value=val)
-                st.dataframe(df, use_container_width=True)
+                col1, col2 = st.columns([1, 2])
+                with col1:
+                    label_name = df.columns[0].replace('_', ' ').title()
+                    value = df.iloc[0,0]
+                    st.metric(label=label_name, value=value)
+                with col2:
+                    st.dataframe(df, use_container_width=True)
 
 # =====================================================
 # 4. SIDEBAR Y NAVEGACIÓN
@@ -118,18 +113,20 @@ menu = st.sidebar.selectbox("Selecciona un Cubo OLAP:", [
     "Cubo 7: Eventos", "Cubo 8: Auditoría"
 ])
 
-# MAPEO DE CUBOS
+# MAPEO DE CUBOS CON LAS CORRECCIONES REALIZADAS
 if menu == "Cubo 1: Financiero":
+    # Incluye v_rev_metodo_pago (Corregida con JOIN detalle_pago)
     render_cubo("💰 Inteligencia Financiera", 
-                ["v_rev_mensual", "v_rev_metodo_pago"], 
-                ["📅 Ingresos Mensuales", "💳 Métodos de Pago"],
-                ["line", "pie"])
+                ["v_rev_mensual", "v_rev_metodo_pago", "v_rev_ticket_medio", "v_rev_impuestos"], 
+                ["📅 Ingresos Mensuales", "💳 Métodos de Pago", "📊 Ticket Promedio", ],
+                ["line", "pie", "metric", "bar"])
 
 elif menu == "Cubo 2: Ocupación":
+    # Incluye v_occ_tipo y v_occ_piso (Corregidas con alias th, h, dr, r)
     render_cubo("🏨 Gestión de Ocupación", 
-                ["v_occ_piso", "v_occ_estadia"], 
-                ["🏢 Por Piso", "⏳ Promedio Estadía"],
-                ["bar", "metric"])
+                ["v_occ_tipo", "v_occ_piso", "v_occ_estadia"], 
+                ["🛏️ Por Tipo Habitacion", "🏢 Por Piso", ],
+                ["bar", "bar", "metric"])
 
 elif menu == "Cubo 3: Servicios":
     render_cubo("💎 Upselling & Servicios", 
@@ -152,13 +149,13 @@ elif menu == "Cubo 5: CRM":
 elif menu == "Cubo 6: Marketing":
     render_cubo("📈 Impacto de Marketing", 
                 ["v_mkt_impacto_dto", "v_mkt_temporadas"], 
-                ["🎟️ % Descuento", "🌦️ Ingreso Temporada"],
+                ["🎟️ % Descuento Promedio", "🌦️ Ingreso por Temporada"],
                 ["metric", "line"])
 
 elif menu == "Cubo 7: Eventos":
     render_cubo("🎭 Análisis de Eventos", 
                 ["v_eve_ingresos", "v_eve_capacidad"], 
-                ["💵 Ingreso Paquete", "👥 Capacidad Media"],
+                ["💵 Ingreso por Paquete", "👥 Capacidad Media"],
                 ["bar", "metric"])
 
 elif menu == "Cubo 8: Auditoría":
@@ -169,7 +166,7 @@ elif menu == "Cubo 8: Auditoría":
 
 # FOOTER
 st.sidebar.markdown("---")
-st.sidebar.info(f"👤 **Analista** \n\n📅 **Fecha:** {datetime.now().strftime('%d/%m/%Y')}")
+st.sidebar.info(f"👤 **Analista:** Adrian\n\n📅 **Fecha:** {datetime.now().strftime('%d/%m/%Y')}")
 
 if st.sidebar.button("♻️ Refrescar Datos"):
     st.cache_resource.clear()
