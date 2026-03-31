@@ -5,9 +5,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-# =====================================================
-# 1. CONFIGURACIÓN Y ESTILO
-# =====================================================
 st.set_page_config(
     page_title="Horizon Stay BI",
     page_icon="🏨",
@@ -138,9 +135,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# =====================================================
-# TEMPLATE PLOTLY PERSONALIZADO
-# =====================================================
+
 PLOTLY_TEMPLATE = dict(
     layout=dict(
         paper_bgcolor="rgba(0,0,0,0)",
@@ -155,9 +150,6 @@ PLOTLY_TEMPLATE = dict(
     )
 )
 
-# =====================================================
-# 2. CONEXIÓN
-# =====================================================
 @st.cache_resource
 def get_connection():
     return psycopg2.connect(
@@ -177,9 +169,7 @@ def run_query(query):
         st.error(f"⚠️ Error de conexión: {e}")
         return pd.DataFrame()
 
-# =====================================================
-# HELPER: encabezado de cubo
-# =====================================================
+
 def cubo_header(titulo, descripcion):
     st.markdown(f"""
     <div class="cubo-header">
@@ -191,11 +181,9 @@ def cubo_header(titulo, descripcion):
 def chart_label(txt):
     st.markdown(f'<p class="chart-label">{txt}</p>', unsafe_allow_html=True)
 
-# =====================================================
-# 3. CUBOS
-# =====================================================
+#OLAP
 
-# ── CUBO 1: INGRESOS ──────────────────────────────
+# ── CUBO 1: INGRESOS
 def cubo_ingresos():
     cubo_header("💰 Inteligencia Financiera", "Análisis de ingresos por categoría, método de pago y periodo")
     df = run_query("SELECT * FROM cubo_ingresos")
@@ -203,7 +191,6 @@ def cubo_ingresos():
         st.info("Sin datos disponibles en cubo_ingresos.")
         return
 
-    # KPIs
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown(f'<div class="metric-card"><div class="metric-value">Bs {df["total_bolivianos"].sum():,.0f}</div><div class="metric-label">Ingreso Total</div></div>', unsafe_allow_html=True)
@@ -247,7 +234,7 @@ def cubo_ingresos():
         st.dataframe(df, use_container_width=True)
 
 
-# ── CUBO 2: OCUPACIÓN ─────────────────────────────
+# ── CUBO 2: OCUPACIÓN 
 def cubo_ocupacion():
     cubo_header("🏨 Gestión de Ocupación", "Estado actual e histórico de habitaciones por categoría")
     df = run_query("SELECT * FROM cubo_ocupacion")
@@ -296,7 +283,7 @@ def cubo_ocupacion():
         st.dataframe(df, use_container_width=True)
 
 
-# ── CUBO 3: RRHH ──────────────────────────────────
+# ── CUBO 3: RRHH
 def cubo_rrhh():
     cubo_header("👷 Rendimiento de Personal", "Asistencias, bonos y desempeño por departamento")
     df = run_query("SELECT * FROM cubo_rrhh_rendimiento")
@@ -344,7 +331,7 @@ def cubo_rrhh():
         st.dataframe(df, use_container_width=True)
 
 
-# ── CUBO 4: FIDELIZACIÓN ──────────────────────────
+# ── CUBO 4: FIDELIZACIÓN 
 def cubo_fidelidad():
     cubo_header("💎 Fidelización y Consumo", "Servicios consumidos por nivel de fidelidad de clientes")
     df = run_query("SELECT * FROM cubo_fidelidad_consumo")
@@ -393,7 +380,7 @@ def cubo_fidelidad():
         st.dataframe(df, use_container_width=True)
 
 
-# ── CUBO 5: MANTENIMIENTO ─────────────────────────
+# ── CUBO 5: MANTENIMIENTO 
 def cubo_mantenimiento():
     cubo_header("🛠️ Gastos de Mantenimiento", "Intervenciones y costos de mantenimiento por categoría de habitación")
     df = run_query("SELECT * FROM cubo_mantenimiento_gastos")
@@ -439,7 +426,7 @@ def cubo_mantenimiento():
         st.dataframe(df, use_container_width=True)
 
 
-# ── CUBO 6: SATISFACCIÓN ──────────────────────────
+# ── CUBO 6: SATISFACCIÓN 
 def cubo_satisfaccion():
     cubo_header("⭐ Calidad del Servicio", "Puntuaciones de encuestas de satisfacción por categoría de habitación")
     df = run_query("SELECT * FROM cubo_satisfaccion_cliente")
@@ -505,7 +492,7 @@ def cubo_satisfaccion():
         st.dataframe(df, use_container_width=True)
 
 
-# ── CUBO 7: NÓMINA ────────────────────────────────
+# ── CUBO 7: NÓMINA 
 def cubo_nomina():
     cubo_header("💵 Análisis de Nómina", "Distribución salarial por departamento y cargo")
     df = run_query("""
@@ -562,7 +549,7 @@ def cubo_nomina():
         st.dataframe(df, use_container_width=True)
 
 
-# ── CUBO 8: AUDITORÍA ─────────────────────────────
+# ── CUBO 8: AUDITORÍA 
 def cubo_auditoria():
     cubo_header("🛡️ Seguridad del Sistema", "Trazabilidad de operaciones por usuario, módulo y tipo de acción")
     df = run_query("SELECT * FROM cubo_auditoria_seguridad")
@@ -611,10 +598,6 @@ def cubo_auditoria():
     with st.expander("📋 Ver datos completos"):
         st.dataframe(df, use_container_width=True)
 
-
-# =====================================================
-# 4. SIDEBAR Y NAVEGACIÓN
-# =====================================================
 with st.sidebar:
     st.markdown("""
     <div style="padding:16px 0 8px 0">
@@ -634,7 +617,6 @@ with st.sidebar:
         "👷  RRHH":             "cubo3",
         "💎  Fidelización":     "cubo4",
         "🛠️  Mantenimiento":   "cubo5",
-        "⭐  Satisfacción":     "cubo6",
         "💵  Nómina":           "cubo7",
         "🛡️  Auditoría":       "cubo8",
     }
@@ -650,7 +632,7 @@ with st.sidebar:
     <div style="padding:8px 0">
         <p style="color:#2a3a4a;font-size:0.72rem;text-transform:uppercase;
                   letter-spacing:0.1em;margin:0 0 6px 0">Sesión activa</p>
-        <p style="color:#4a6478;font-size:0.82rem;margin:0">👤 Chicosmalos</p>
+        <p style="color:#4a6478;font-size:0.82rem;margin:0">👤 </p>
         <p style="color:#4a6478;font-size:0.82rem;margin:2px 0 0 0">📚 3er Semestre · Ciencia de Datos</p>
         <p style="color:#2a3a4a;font-size:0.75rem;margin:8px 0 0 0">
     """ + datetime.now().strftime("%d %b %Y · %H:%M") + """
@@ -658,9 +640,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# =====================================================
-# 5. RENDER
-# =====================================================
+
 st.markdown("""
 <div style="margin-bottom:28px">
     <p class="main-title">🏨 Horizon Stay BI</p>
