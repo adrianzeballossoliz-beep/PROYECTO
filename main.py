@@ -153,11 +153,12 @@ PLOTLY_TEMPLATE = dict(
 @st.cache_resource
 def get_connection():
     return psycopg2.connect(
-        host="localhost",
-        database="postgres",
-        user="postgres",
-        password="123456",
+        host="dpg-d76tgks50q8c73dotdbg-a.oregon-postgres.render.com",
+        database="mi_db_92yz",
+        user="mi_db_92yz_user",
+        password="407JjsikRY4wljJfDLJC476q1qFhf5vZ",
         port="5432",
+        sslmode="require"
     )
 
 def run_query(query):
