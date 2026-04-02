@@ -156,7 +156,7 @@ def get_connection():
         host="dpg-d76tgks50q8c73dotdbg-a.oregon-postgres.render.com",
         database="mi_db_92yz",
         user="mi_db_92yz_user",
-        password="407JjsikRY4wljJfDLJC476q1qFhf5vZ", # Asegúrate de que sea 4-cero-7
+        password="4O7JjsikRY4wljJfDLJC476q1qFhf5vZ", # Asegúrate de que sea 4-cero-7
         port="5432",
         sslmode="require"
     )
